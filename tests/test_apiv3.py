@@ -100,7 +100,6 @@ class TestAPIv3(MailmanAPITestCase):
         self.assertEqual(7, resp.json)
 
     def test_sendmail(self):
-        path = ''
         mlist = MailList.MailList(self.list_name)
         data = {}
         data['email_to'] = mlist.GetListEmail()
@@ -112,13 +111,12 @@ class TestAPIv3(MailmanAPITestCase):
         data['subject'] = 'subject test'
         data['body'] = 'body test'
 
-        resp = self.client.post(self.url + self.list_name + path,
+        resp = self.client.post(self.url + self.list_name,
                                 data, expect_errors=True)
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(0, resp.json)
 
     def test_sendmail_with_reply(self):
-        path = ''
         mlist = MailList.MailList(self.list_name)
         data = {}
         data['email_to'] = mlist.GetListEmail()
@@ -131,15 +129,14 @@ class TestAPIv3(MailmanAPITestCase):
         data['body'] = 'body test'
         data['in_reply_to'] = 1
 
-        resp = self.client.post(self.url + self.list_name + path,
+        resp = self.client.post(self.url + self.list_name,
                                 data, expect_errors=True)
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(0, resp.json)
 
     def test_sendmail_missing_information(self):
-        path = ''
         data = {}
-        resp = self.client.post(self.url + self.list_name + path,
+        resp = self.client.post(self.url + self.list_name,
                                 data, expect_errors=True)
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(8, resp.json)
@@ -154,12 +151,11 @@ class TestAPIv3(MailmanAPITestCase):
         self.assertEqual(12, resp.json)
 
     def test_mailman_site_list_not_listed_among_lists(self):
-        path = ''
         mailman_site_list = Defaults.MAILMAN_SITE_LIST
 
         self.create_list(mailman_site_list)
 
-        resp = self.client.get(self.url + path, expect_errors=True)
+        resp = self.client.get(self.url, expect_errors=True)
 
         self.assertEqual(resp.status_code, 200)
         self.assertIsInstance(resp.json, list)
@@ -169,9 +165,7 @@ class TestAPIv3(MailmanAPITestCase):
             self.assertNotEqual(mlist.get("listname"), mailman_site_list)
 
     def test_list_lists(self):
-        path = ''
-
-        resp = self.client.get(self.url + path, expect_errors=True)
+        resp = self.client.get(self.url, expect_errors=True)
         total_lists = len(resp.json)
         found = False
 
@@ -360,6 +354,9 @@ class TestAPIv3(MailmanAPITestCase):
         resp = self.client.get(self.url + list_name + path, expect_errors=True)
         self.assertEqual(resp.status_code, 200)
         self.assertEqual([self.data['address']], resp.json)
+        
+    def test_member_singular(self):
+        #TODO
 
     def test_members_unknown_list(self):
         list_name = 'list14'
@@ -368,3 +365,24 @@ class TestAPIv3(MailmanAPITestCase):
         resp = self.client.get(self.url + list_name + path, expect_errors=True)
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(12, resp.json)
+        
+    def test_delete_list(self):
+        #TODO place holder for future addition of list deletion
+    
+    def test_list_attr(self):
+        resp = self.client.get(self.url + listname, expect_errors=True)
+        total_lists = len(resp.json)
+        found = False
+
+        self.assertEqual(resp.status_code, 200)
+        self.assertIsInstance(resp.json, list)
+        self.assertEqual(total_lists, 1)
+
+        for mlist in resp.json:
+            self.assertIsInstance(mlist, dict)
+            if mlist.get("listname") == self.list_name:
+                found = True
+
+        self.assertTrue(found)
+    
+    

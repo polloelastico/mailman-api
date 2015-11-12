@@ -36,3 +36,7 @@ def get_mailinglist(listname, lock=True):
 
 def get_timestamp():
     return strftime('%a, %d %b %Y %H:%M:%S %z (%Z)')
+    
+def remove_list(listname):
+    #TODO
+    #see /usr/lib/mailman/bin/rmlist

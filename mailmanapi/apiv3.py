@@ -64,6 +64,37 @@ def list_lists():
             lists.append(list_values)
 
     return jsonify(lists)
+    
+def list_attr(listname):
+    """Returns basic attributes of specific list.
+
+    **Method**: GET
+
+    **URI**: /v3/<listname>
+
+    Returns a dictionary containing the basic attributes for 
+    a specific mailing list that exist on this server."""
+
+    all_lists = Utils.list_names()
+    lists = []
+
+    try:
+        mlist = get_mailinglist(listname)
+    except Errors.MMUnknownListError, e:
+        return jsonify(ERRORS_CODE[e.__class__.__name__])
+    list_values = {
+        'listname': listname,
+        'archive_private': mlist.archive_private,
+        'real_name': mlist.real_name,
+        'description': mlist.description,
+        'member_count': len(mlist.getMembers()),
+        'created': mlist.created_at,
+        'owner': mlist.owner
+    }
+
+    lists.append(list_values)
+
+    return jsonify(lists)
 
 
 def subscribe(listname):
@@ -229,6 +260,24 @@ def create_list(listname):
         result = jsonify(ERRORS_CODE[e.__class__.__name__])
     finally:
         mail_list.Unlock()
+    return result
+    
+def delete_list
+    """Delete an email list.
+
+    **Method**: DELETE
+
+    **URI**: /v3/<listname>"""
+    mlist = get_mailinglist(listname)
+    result = jsonify(ERRORS_CODE['Ok'])
+
+    try:
+        mlist.ApprovedDeleteMember(address, admin_notif=False, userack=True)
+    except Errors.NotAMemberError, e:
+        result = jsonify(ERRORS_CODE[e.__class__.__name__])
+    finally:
+        mlist.Save()
+        mlist.Unlock()
     return result
 
 

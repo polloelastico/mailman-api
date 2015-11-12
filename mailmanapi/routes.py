@@ -36,19 +36,19 @@ def create_routes(app):
     # v3
     app.route('/', method='GET',
               callback=apiv3.list_lists)
-    app.route('/<listname>', method='PUT',
+    app.route('/v3/<listname>', method='PUT',
               callback=apiv3.create_list)
-    app.route('/<listname>', method='DELETE',
+    app.route('/v3/<listname>', method='DELETE',
               callback=apiv3.delete_list)
-    app.route('/<listname>', method='GET',
+    app.route('/v3/<listname>', method='GET',
               callback=apiv3.list_attr)
-    app.route('/<listname>/', method='POST',
+    app.route('/v3/<listname>/', method='POST',
               callback=apiv3.sendmail)
-    app.route('/<listname>/members', method='PUT',
+    app.route('/v3/<listname>/members', method='PUT',
               callback=apiv3.subscribe)
-    app.route('/<listname>/members', method='DELETE',
+    app.route('/v3/<listname>/members', method='DELETE',
               callback=apiv3.unsubscribe)
-    app.route('/<listname>/members', method='GET',
+    app.route('/v3/<listname>/members', method='GET',
               callback=apiv3.members)
 
 
