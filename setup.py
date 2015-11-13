@@ -38,6 +38,8 @@ setup(
     install_requires=[
         "gunicorn >= 18.0",
         "bottle >= 0.11.6",
+        "bottle-beaker>=0.1.0",
+        "bottle-cork>=0.12.0",
     ],
     tests_require=TEST_REQUIREMENTS,
 )
