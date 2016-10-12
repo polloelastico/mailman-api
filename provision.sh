@@ -30,5 +30,5 @@ sudo pip install paste
 sudo pip install bottle-beaker
 
 # start mailman-api
-sudo scripts/mailman-api
+sudo /vagrant/scripts/mailman-api
 
