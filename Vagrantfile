@@ -21,7 +21,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # Create a forwarded port mapping which allows access to a specific port
   # within the machine from a port on the host machine. In the example below,
   # accessing "localhost:8080" will access port 80 on the guest machine.
-  # config.vm.network :forwarded_port, guest: 3306, host: 3306    # default is 3306 for mysql
+
+  # forwarding for mailman-api
+  config.vm.network :forwarded_port, guest: 8124, host: 8124
 
   # Create a private network, which allows host-only access to the machine
   # using a specific IP.
