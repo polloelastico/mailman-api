@@ -40,3 +40,4 @@ def get_timestamp():
 def remove_list(listname):
     #TODO
     #see /usr/lib/mailman/bin/rmlist
+    pass
