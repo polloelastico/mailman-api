@@ -124,7 +124,7 @@ def subscribe(listname):
     try:
         mlist.AddMember(userdesc)
     except (Errors.MMSubscribeNeedsConfirmation,
-            Errors.MMNeedApproval,man 
+            Errors.MMNeedApproval,man,
             Errors.MMAlreadyAMember,
             Errors.MembershipIsBanned,
             Errors.MMBadEmailError,
@@ -262,7 +262,7 @@ def create_list(listname):
         mail_list.Unlock()
     return result
     
-def delete_list
+def delete_list():
     """Delete an email list.
 
     **Method**: DELETE
