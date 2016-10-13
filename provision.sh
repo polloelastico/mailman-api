@@ -17,6 +17,10 @@ fi
 # add repos
 sudo yum -y install epel-release
 
+# install python and dev tools
+sudo yum groupinstall -y "Development tools"
+sudo yum install -y python-devel.x86_64
+
 # install and config
 sudo yum -y install mailman
 
@@ -30,5 +34,8 @@ sudo pip install paste
 sudo pip install bottle-beaker
 
 # start mailman-api
-sudo /vagrant/scripts/mailman-api
+cd /vagrant
+export PATH=$PATH:/vagrant
+sudo python setup.py install
+sudo /usr/bin/mailman-api
 
