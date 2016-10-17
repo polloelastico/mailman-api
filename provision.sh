@@ -37,6 +37,9 @@ sudo pip install bottle-beaker
 cd /vagrant
 export PATH=$PATH:/vagrant
 sudo /usr/bin/python setup.py install
-sudo /usr/bin/python scripts/mailman-api
+sudo cp init/systemd/mailman-api.service /usr/lib/systemd/system
+sudo ln -s /usr/lib/systemd/system/mailman-api.service /etc/systemd/system/multi-user.target.wants/mailman-api.service
+
+sudo systemctl start mailman-api
 
 
