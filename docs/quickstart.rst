@@ -24,7 +24,7 @@ We are currently working to provide linux packages (deb and rpm). Stay tunned!
 
 
 
-Running the Sevice 
+Running the Sevice
 -------------------
 
 
@@ -37,10 +37,7 @@ Usage: mailman-api [options]
 
 Options:
   -h, --help            show this help message and exit
-  -b BIND, --bind=BIND  Bind address. Default: '127.0.0.1:8124'.
-  --allow-from=ALLOW_FROM
-                        IPs to allow incoming requests. By deufalt only allow
-                        connections from '127.0.0.1'.
+  -b BIND, --bind=BIND  Bind address. Default: '0.0.0.0:8124'.
   -l MAILMANLIB_PATH, --mailman-lib-path=MAILMANLIB_PATH
                         Path to mailman libs directory. Default:
                         '/usr/lib/mailman'.

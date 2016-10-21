@@ -9,6 +9,8 @@ dist/
 *.egg-info/
 *.egg/
 *.egg
+*.eggs/
+*.eggs
 
 .DS_Store
 .gitignore

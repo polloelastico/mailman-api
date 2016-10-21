@@ -8,12 +8,8 @@ from optparse import OptionParser
 
 def parse_options():
     parser = OptionParser()
-    parser.add_option("-b", "--bind", dest="bind", default='127.0.0.1:8124',
-                      help="Bind address. Default: '127.0.0.1:8124'.")
-    parser.add_option("--allow-from", action="append",
-                      default=['127.0.0.1'], dest="allow_from",
-                      help=("IPs to allow incoming requests. By deufalt only "
-                            "allow connections from '127.0.0.1'."))
+    parser.add_option("-b", "--bind", dest="bind", default='0.0.0.0:8124',
+                      help="Bind address. Default: '0.0.0.0:8124'.")
     parser.add_option("-l", "--mailman-lib-path", dest="mailmanlib_path",
                       default='/usr/lib/mailman',
                       help=("Path to mailman libs directory. "

@@ -1,14 +1,11 @@
 import os
 import re
 import codecs
-
 from setuptools import setup
-
 
 def read(*parts):
     return codecs.open(os.path.join(os.path.dirname(__file__), *parts),
                        encoding='utf8').read()
-
 
 def find_version(*file_paths):
     version_file = read(*file_paths)
@@ -18,7 +15,6 @@ def find_version(*file_paths):
         return version_match.group(1)
     raise RuntimeError("Unable to find version string.")
 
-
 TEST_REQUIREMENTS = [
     'WebTest',
 ]
@@ -26,13 +22,11 @@ TEST_REQUIREMENTS = [
 setup(
     name='mailman-api',
     version=find_version('mailmanapi/__init__.py'),
-    author='Sergio Oliveira',
-    author_email='sergio@tracy.com.br',
+    author='Edouard Poitras',
+    author_email='epoitras@linuxfoundation.org',
     packages=['mailmanapi'],
     package_data={'mailmanapi': ['templates/*']},
     scripts=['scripts/mailman-api'],
-    url='http://pypi.python.org/pypi/mailman-api/',
-    license='LICENSE.txt',
     description='REST API daemon to interact with Mailman 2',
     long_description=read('README.rst'),
     install_requires=[

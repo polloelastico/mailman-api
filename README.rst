@@ -1,8 +1,6 @@
 mailman-api
 ===========
 
-.. image:: https://coveralls.io/repos/TracyWebTech/mailman-api/badge.svg?branch=apiv2&service=github :target: https://coveralls.io/github/TracyWebTech/mailman-api?branch=apiv2 
-
 `mailman-api` provides a daemon that will listen to HTTP requests,
 providing access to a REST API that can be used to interact with a
 locally-installed Mailman instance.
@@ -10,7 +8,7 @@ locally-installed Mailman instance.
 Documentation
 --------------
 
-Documentation available at: http://mailman-api.readthedocs.org/
+Documentation available in docs/ folder.
 
 
 Licensing information

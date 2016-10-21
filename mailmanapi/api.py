@@ -1,6 +1,5 @@
 import os
 import uuid
-
 from .utils import parse_boolean, jsonify, get_mailinglist, get_timestamp
 from Mailman import (Errors, Post, mm_cfg, UserDesc,
                      MailList, Utils, Defaults)
@@ -27,19 +26,17 @@ ERRORS_CODE = {
     'InvalidParams': 14,
 }
 
-
 def list_lists():
     """Lists existing mailing lists on the server.
 
     **Method**: GET
 
-    **URI**: /v3/
+    **URI**: /
 
-    Returns a list of dictionaries containing the basic attributes for 
+    Returns a list of dictionaries containing the basic attributes for
     each mailing list that exist on this server.
-    
-    **Parameters**:
 
+    **Parameters**:
       * `address` (optional): email address to search for in lists."""
 
     all_lists = Utils.list_names()
@@ -64,15 +61,15 @@ def list_lists():
             lists.append(list_values)
 
     return jsonify(lists)
-    
+
 def list_attr(listname):
     """Returns basic attributes of specific list.
 
     **Method**: GET
 
-    **URI**: /v3/<listname>
+    **URI**: /<listname>
 
-    Returns a dictionary containing the basic attributes for 
+    Returns a dictionary containing the basic attributes for
     a specific mailing list that exist on this server."""
 
     all_lists = Utils.list_names()
@@ -96,13 +93,12 @@ def list_attr(listname):
 
     return jsonify(lists)
 
-
 def subscribe(listname):
     """Adds a new subscriber to the list called `<listname>`
 
     **Method**: PUT
 
-    **URI**: /v3/<listname>/members
+    **URI**: /<listname>/members
 
     **Parameters**:
 
@@ -112,7 +108,6 @@ def subscribe(listname):
         digests instead of every mail sent to the list.
 
     """
-
     address = request.forms.get('address')
     fullname = request.forms.get('fullname')
     digest = parse_boolean(request.forms.get('digest'))
@@ -136,20 +131,18 @@ def subscribe(listname):
 
     return result
 
-
 def unsubscribe(listname):
     """Unsubscribe an email address from the mailing list.
 
     **Method**: DELETE
 
-    **URI**: /v3/<listname>/members
+    **URI**: /<listname>/members
 
     **Parameters**:
 
       * `address`: email address that is to be unsubscribed from the list
 
     """
-
     address = request.forms.get('address')
     mlist = get_mailinglist(listname)
     result = jsonify(ERRORS_CODE['Ok'])
@@ -164,13 +157,12 @@ def unsubscribe(listname):
 
     return result
 
-
 def sendmail(listname):
     """Posts an email to the mailing list.
 
     **Method**: POST
 
-    **URI**: /v3/<listname>
+    **URI**: /<listname>
 
     **Parameters**:
 
@@ -180,7 +172,6 @@ def sendmail(listname):
       * `body`: the body of the message.
       * `in_reply_to` (optional): Message-ID of the message that is being
         replied to, if any."""
-
     try:
         mlist = MailList.MailList(listname, lock=False)
     except Errors.MMUnknownListError, e:
@@ -210,13 +201,12 @@ def sendmail(listname):
     Post.inject(listname, email.encode('utf8'), qdir=mm_cfg.INQUEUE_DIR)
     return result
 
-
 def create_list(listname):
     """Create an email list.
 
     **Method**: PUT
 
-    **URI**: /v3/<listname>
+    **URI**: /<listname>
 
     **Parameters**:
 
@@ -261,13 +251,13 @@ def create_list(listname):
     finally:
         mail_list.Unlock()
     return result
-    
+
 def delete_list():
     """Delete an email list.
 
     **Method**: DELETE
 
-    **URI**: /v3/<listname>"""
+    **URI**: /<listname>"""
     mlist = get_mailinglist(listname)
     result = jsonify(ERRORS_CODE['Ok'])
 
@@ -280,20 +270,19 @@ def delete_list():
         mlist.Unlock()
     return result
 
-
 def members(listname):
     """Lists subscribers for the `listname` list.
 
     **Method**: GET
 
-    **URI**: /v3/<listname>/members
+    **URI**: /<listname>/members
 
     **Parameters**:
 
       * `address` (optional): email address to search for in list."""
 
     address = request.query.get('address')
-    
+
     try:
         mlist = MailList.MailList(listname.lower(), lock=False)
     except Errors.MMUnknownListError, e:
