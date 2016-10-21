@@ -39,8 +39,8 @@ class TestAPI(MailmanAPITestCase):
         self.change_list_attribute('subscribe_policy', 2)
         resp = self.client.put(self.url + self.list_name + path,
                                self.data, expect_errors=True)
-        self.assertEqual(resp.status_code, 200)
-        self.assertEqual(2, resp.json)
+        self.assertEqual(resp.status_code, 401)
+        self.assertEqual({'error': 'subscriptions to List require moderator approval'}, resp.json)
 
     def test_subscribe_banned(self):
         path = '/members'
@@ -184,7 +184,7 @@ class TestAPI(MailmanAPITestCase):
 
         resp = self.client.put(url, data, expect_errors=True)
         self.assertEqual(resp.status_code, 200)
-        self.assertEqual(0, resp.json)
+        self.assertEqual(resp.json, {'message': 'Success'})
         self.remove_list(new_list)
 
     def test_create_list_already_exists(self):

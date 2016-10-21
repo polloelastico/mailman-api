@@ -8,6 +8,26 @@ try:
 except ImportError:
     logging.error('Could not import Mailman module')
 
+ERROR_CODES = {
+    'MMSubscribeNeedsConfirmation': 406,
+    'MMNeedApproval': 401,
+    'MMAlreadyAMember': 405,
+    'MembershipIsBanned': 403,
+    'MMBadEmailError': 400,
+    'MMHostileAddress': 403,
+    'NotAMemberError': 400,
+    'MissingInformation': 400,
+    'BadListNameError': 404,
+    'AssertionError': 500,
+    'InvalidPassword': 400,
+    'MMUnknownListError': 500,
+    'MMListAlreadyExistsError': 400,
+    'InvalidParams': 400,
+}
+
+def get_error_code(class_name):
+    return ERROR_CODES.get(class_name, 500)
+
 def parse_boolean(value):
     if value and value.lower() == 'true':
         return True
