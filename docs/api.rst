@@ -55,23 +55,6 @@ Get the list attributes.
     Returns a dictionary containing the basic attributes for a specific mailing
     list that exist on this server.
 
-Send Mail
-+++++++++
-Send an email to the list.
-
-    **Method**: POST
-
-    **URI**: /<listname>
-
-    **Parameters**:
-
-      * `name_from`: name of the poster
-      * `email_from`: email address of the poster
-      * `subject`: the subject of the message
-      * `body`: the body of the message.
-      * `in_reply_to` (optional): Message-ID of the message that is being
-        replied to, if any.
-
 Subscribe
 +++++++++
 Adds a new subscriber to the list called `<listname>`

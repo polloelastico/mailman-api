@@ -6,7 +6,6 @@ from Mailman import (Errors, Post, mm_cfg, UserDesc,
 from bottle import request, response, template, abort
 
 CWD = os.path.abspath(os.path.dirname(__file__))
-EMAIL_TEMPLATE = os.path.join(CWD, 'templates', 'message.tpl')
 
 def list_lists():
     """Lists existing mailing lists on the server.
@@ -141,49 +140,6 @@ def unsubscribe(listname):
         mlist.Save()
         mlist.Unlock()
     return jsonify({'message': message})
-
-def sendmail(listname):
-    """Posts an email to the mailing list.
-
-    **Method**: POST
-
-    **URI**: /<listname>
-
-    **Parameters**:
-
-      * `name_from`: name of the poster
-      * `email_from`: email address of the poster
-      * `subject`: the subject of the message
-      * `body`: the body of the message.
-      * `in_reply_to` (optional): Message-ID of the message that is being
-        replied to, if any."""
-    response.status_code = 200
-    response.content_type = 'application/json'
-    try:
-        mlist = MailList.MailList(listname, lock=False)
-    except Errors.MMUnknownListError, e:
-        response.status_code = get_error_code(e.__class__.__name__)
-        return jsonify({'message': str(e)})
-    context = {}
-    context['email_to'] = mlist.GetListEmail()
-    context['message_id'] = uuid.uuid1()
-    context['ip_from'] = request.environ.get('REMOTE_ADDR')
-    context['timestamp'] = get_timestamp()
-    context['name_from'] = request.forms.get('name_from')
-    context['email_from'] = request.forms.get('email_from')
-    context['subject'] = request.forms.get('subject')
-    context['body'] = request.forms.get('body')
-    in_reply_to = request.forms.get('in_reply_to')
-    if in_reply_to:
-        context['in_reply_to'] = in_reply_to
-
-    if None in context.values():
-        response.status_code = get_error_code('MissingInformation')
-        return jsonify({'message': 'Missing information'})
-
-    email = template(EMAIL_TEMPLATE, context)
-    Post.inject(listname, email.encode('utf8'), qdir=mm_cfg.INQUEUE_DIR)
-    return jsonify({'message': 'Success'})
 
 def create_list(listname):
     """Create an email list.

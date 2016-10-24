@@ -95,57 +95,6 @@ class TestAPI(MailmanAPITestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(7, resp.json)
 
-    def test_sendmail(self):
-        mlist = MailList.MailList(self.list_name)
-        data = {}
-        data['email_to'] = mlist.GetListEmail()
-        data['message_id'] = 1
-        data['ip_from'] = '127.0.0.1'
-        data['timestamp'] = strftime('%a, %d %b %Y %H:%M:%S %z (%Z)')
-        data['name_from'] = 'user test'
-        data['email_from'] = self.data['address']
-        data['subject'] = 'subject test'
-        data['body'] = 'body test'
-
-        resp = self.client.post(self.url + self.list_name,
-                                data, expect_errors=True)
-        self.assertEqual(resp.status_code, 200)
-        self.assertEqual(0, resp.json)
-
-    def test_sendmail_with_reply(self):
-        mlist = MailList.MailList(self.list_name)
-        data = {}
-        data['email_to'] = mlist.GetListEmail()
-        data['message_id'] = 1
-        data['ip_from'] = '127.0.0.1'
-        data['timestamp'] = strftime('%a, %d %b %Y %H:%M:%S %z (%Z)')
-        data['name_from'] = 'user test'
-        data['email_from'] = self.data['address']
-        data['subject'] = 'subject test'
-        data['body'] = 'body test'
-        data['in_reply_to'] = 1
-
-        resp = self.client.post(self.url + self.list_name,
-                                data, expect_errors=True)
-        self.assertEqual(resp.status_code, 200)
-        self.assertEqual(0, resp.json)
-
-    def test_sendmail_missing_information(self):
-        data = {}
-        resp = self.client.post(self.url + self.list_name,
-                                data, expect_errors=True)
-        self.assertEqual(resp.status_code, 200)
-        self.assertEqual(8, resp.json)
-
-    def test_sendmail_unknown_list(self):
-        path = ''
-        data = {}
-
-        resp = self.client.post(self.url + path + 'unknown_list',
-                                data, expect_errors=True)
-        self.assertEqual(resp.status_code, 200)
-        self.assertEqual(12, resp.json)
-
     def test_mailman_site_list_not_listed_among_lists(self):
         mailman_site_list = Defaults.MAILMAN_SITE_LIST
 
