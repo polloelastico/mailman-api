@@ -1,11 +1,19 @@
 import os
-import uuid
-from .utils import parse_boolean, jsonify, get_mailinglist, get_timestamp, get_error_code
-from Mailman import (Errors, Post, mm_cfg, UserDesc,
-                     MailList, Utils, Defaults)
-from bottle import request, response, template, abort
+import json
+from .utils import parse_boolean, \
+                   get_mailinglist, \
+                   get_error_code, \
+                   get_error_message
+from Mailman import Errors, \
+                    UserDesc, \
+                    MailList, \
+                    Utils, \
+                    Defaults
+from bottle import HTTPResponse, \
+                   request
 
 CWD = os.path.abspath(os.path.dirname(__file__))
+
 
 def list_lists():
     """Lists existing mailing lists on the server.
@@ -41,7 +49,9 @@ def list_lists():
 
             lists.append(list_values)
 
-    return jsonify(lists)
+    return HTTPResponse(body=json.dumps(lists),
+                        content_type='application/json')
+
 
 def list_attr(listname):
     """Returns basic attributes of specific list.
@@ -53,16 +63,15 @@ def list_attr(listname):
     Returns a dictionary containing the basic attributes for
     a specific mailing list that exist on this server."""
 
-    all_lists = Utils.list_names()
     lists = []
 
-    response.status = 200
-    response.content_type = 'application/json'
     try:
         mlist = get_mailinglist(listname)
     except Errors.MMUnknownListError, e:
-        response.status = get_error_code(e.__class__.__name__)
-        return {'message': str(e)}
+        message = get_error_message(e.__class__.__name__) + ': ' + str(e)
+        return HTTPResponse(status=get_error_code(e.__class__.__name__),
+                            body=json.dumps({'message': message}),
+                            content_type='application/json')
     list_values = {
         'listname': listname,
         'archive_private': mlist.archive_private,
@@ -73,7 +82,9 @@ def list_attr(listname):
         'owner': mlist.owner
     }
     lists.append(list_values)
-    return jsonify(lists)
+    return HTTPResponse(body=json.dumps(lists),
+                        content_type='application/json')
+
 
 def subscribe(listname):
     """Adds a new subscriber to the list called `<listname>`
@@ -97,8 +108,7 @@ def subscribe(listname):
     mlist = get_mailinglist(listname)
     userdesc = UserDesc.UserDesc(address, fullname, digest=digest)
     message = 'Success'
-    response.status = 200
-    response.content_type = 'application/json'
+    status_code = 200
     try:
         mlist.AddMember(userdesc)
     except (Errors.MMSubscribeNeedsConfirmation,
@@ -107,12 +117,20 @@ def subscribe(listname):
             Errors.MembershipIsBanned,
             Errors.MMBadEmailError,
             Errors.MMHostileAddress), e:
-        response.status = get_error_code(e.__class__.__name__)
-        message = str(e)
+        class_name = e.__class__.__name__
+        # Don't append error string for MMSubscribeNeedsConfirmation exception.
+        if class_name == 'MMSubscribeNeedsConfirmation':
+            message = get_error_message(e.__class__.__name__)
+        else:
+            message = get_error_message(e.__class__.__name__) + ': ' + str(e)
+        status_code = get_error_code(e.__class__.__name__)
     finally:
         mlist.Save()
         mlist.Unlock()
-    return jsonify({'message': message})
+    return HTTPResponse(status=status_code,
+                        body=json.dumps({'message': message}),
+                        content_type='application/json')
+
 
 def unsubscribe(listname):
     """Unsubscribe an email address from the mailing list.
@@ -129,17 +147,19 @@ def unsubscribe(listname):
     address = request.forms.get('address')
     mlist = get_mailinglist(listname)
     message = 'Success'
-    response.status_code = 200
-    response.content_type = 'application/json'
+    status_code = 200
     try:
         mlist.ApprovedDeleteMember(address, admin_notif=False, userack=True)
     except Errors.NotAMemberError, e:
-        response.status_code = get_error_code(e.__class__.__name__)
-        message = str(e)
+        message = get_error_message(e.__class__.__name__) + ': ' + str(e)
+        status_code = get_error_code(e.__class__.__name__)
     finally:
         mlist.Save()
         mlist.Unlock()
-    return jsonify({'message': message})
+    return HTTPResponse(status=status_code,
+                        body=json.dumps({'message': message}),
+                        content_type='application/json')
+
 
 def create_list(listname):
     """Create an email list.
@@ -160,15 +180,15 @@ def create_list(listname):
     subscribe_policy = request.forms.get('subscribe_policy', 1)
     archive_private = request.forms.get('archive_private', 0)
 
-    message = 'Success'
-    response.status_code = 200
-    response.content_type = 'application/json'
+    status_code = 200
     try:
         subscribe_policy = int(subscribe_policy)
         archive_private = int(archive_private)
     except ValueError, e:
-        response.status_code = get_error_code('InvalidParams')
-        return jsonify({'message': 'Invalid parameters: %s' %str(e)})
+        message = 'Invalid parameters: ' + str(e)
+        return HTTPResponse(status=get_error_code('InvalidParams'),
+                            body=json.dumps({'message': message}),
+                            content_type='application/json')
 
     if subscribe_policy < 1 or subscribe_policy > 3:
         subscribe_policy = 1
@@ -177,12 +197,15 @@ def create_list(listname):
         archive_private = 0
 
     if password == '':
-        response.status_code = get_error_code('InvalidPassword')
-        return jsonify({'message': 'Invalid password'})
+        message = 'Invalid password'
+        return HTTPResponse(status=get_error_code('InvalidPassword'),
+                            body=json.dumps({'message': message}),
+                            content_type='application/json')
     else:
         password = Utils.sha_new(password).hexdigest()
 
     mail_list = MailList.MailList()
+    message = 'Success'
     try:
         mail_list.Create(listname, admin, password)
         mail_list.archive_private = archive_private
@@ -190,13 +213,16 @@ def create_list(listname):
         mail_list.Save()
     except (Errors.BadListNameError, AssertionError,
             Errors.MMBadEmailError, Errors.MMListAlreadyExistsError), e:
-        response.status_code = get_error_code(e.__class__.__name__)
-        message = str(e)
+        message = get_error_message(e.__class__.__name__) + ': ' + str(e)
+        status_code = get_error_code(e.__class__.__name__)
     finally:
         mail_list.Unlock()
-    return jsonify({'message': message})
+    return HTTPResponse(status=status_code,
+                        body=json.dumps({'message': message}),
+                        content_type='application/json')
 
-def delete_list():
+
+def delete_list(listname):
     """Delete an email list.
 
     **Method**: DELETE
@@ -204,17 +230,19 @@ def delete_list():
     **URI**: /<listname>"""
     mlist = get_mailinglist(listname)
     message = 'Success'
-    response.status_code = 200
-    response.content_type = 'application/json'
+    status_code = 200
     try:
         mlist.ApprovedDeleteMember(address, admin_notif=False, userack=True)
     except Errors.NotAMemberError, e:
-        response.status_code = get_error_code(e.__class__.__name__)
-        message = str(e)
+        message = get_error_message(e.__class__.__name__) + ': ' + str(e)
+        status_code = get_error_code(e.__class__.__name__)
     finally:
         mlist.Save()
         mlist.Unlock()
-    return jsonify({'message': message})
+    return HTTPResponse(status=status_code,
+                        body=json.dumps({'message': message}),
+                        content_type='application/json')
+
 
 def members(listname):
     """Lists subscribers for the `listname` list.
@@ -228,25 +256,29 @@ def members(listname):
       * `address` (optional): email address to search for in list."""
 
     address = request.query.get('address')
-    response.status_code = 200
-    response.content_type = 'application/json'
     try:
         mlist = MailList.MailList(listname.lower(), lock=False)
     except Errors.MMUnknownListError, e:
-        response.status_code = get_error_code(e.__class__.__name__)
-        return jsonify({'message': str(e)})
+        message = get_error_message(e.__class__.__name__) + ': ' + listname
+        return HTTPResponse(status=get_error_code(e.__class__.__name__),
+                            body=json.dumps({'message': message}),
+                            content_type='application/json')
     if not address:
-      return jsonify(mlist.getMembers())
+        return HTTPResponse(body=json.dumps(mlist.getMembers()),
+                            content_type='application/json')
     else:
-      member = []
-      try:
-        memberKey = mlist.getMemberKey(address)
-      except Errors.NotAMemberError, e:
-        response.status_code = get_error_code(e.__class__.__name__)
-        return jsonify({'message': str(e)})
-      member_values = {
-          'address' : memberKey,
-          'fullname' : mlist.getMemberName(memberKey)
-      }
-      member.append(member_values)
-      return jsonify(member)
+        member = []
+        try:
+            memberKey = mlist.getMemberKey(address)
+        except Errors.NotAMemberError, e:
+            message = get_error_message(e.__class__.__name__) + ': ' + str(e)
+            return HTTPResponse(status=get_error_code(e.__class__.__name__),
+                                body=json.dumps({'message': message}),
+                                content_type='application/json')
+        member_values = {
+            'address': memberKey,
+            'fullname': mlist.getMemberName(memberKey)
+        }
+        member.append(member_values)
+        return HTTPResponse(body=json.dumps(member),
+                            content_type='application/json')

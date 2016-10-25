@@ -5,7 +5,7 @@ from time import strftime
 class TestAPI(MailmanAPITestCase):
     url = '/'
     data = {'address': 'user@email.com'}
-    list_name = 'list'
+    list_name = 'test_list'
 
     def setUp(self):
         super(TestAPI, self).setUp()
@@ -20,9 +20,9 @@ class TestAPI(MailmanAPITestCase):
 
         self.change_list_attribute('subscribe_policy', 0)
         resp = self.client.put(self.url + self.list_name + path,
-                               self.data, expect_errors=True)
+                               self.data, expect_errors=False)
         self.assertEqual(resp.status_code, 200)
-        self.assertEqual(0, resp.json)
+        self.assertEqual(resp.json, {'message': 'Success'})
 
     def test_subscribe_confirm(self):
         path = '/members'
@@ -30,8 +30,8 @@ class TestAPI(MailmanAPITestCase):
         self.change_list_attribute('subscribe_policy', 1)
         resp = self.client.put(self.url + self.list_name + path,
                                self.data, expect_errors=True)
-        self.assertEqual(resp.status_code, 200)
-        self.assertEqual(1, resp.json)
+        self.assertEqual(resp.status_code, 406)
+        self.assertEqual(resp.json, {'message': 'Subscribe needs confirmation'})
 
     def test_subscribe_approval(self):
         path = '/members'
@@ -40,7 +40,7 @@ class TestAPI(MailmanAPITestCase):
         resp = self.client.put(self.url + self.list_name + path,
                                self.data, expect_errors=True)
         self.assertEqual(resp.status_code, 401)
-        self.assertEqual({'error': 'subscriptions to List require moderator approval'}, resp.json)
+        self.assertEqual(resp.json, {'message': 'Need approval: subscriptions to Test_list require moderator approval'})
 
     def test_subscribe_banned(self):
         path = '/members'
@@ -51,8 +51,8 @@ class TestAPI(MailmanAPITestCase):
 
         resp = self.client.put(self.url + self.list_name + path,
                                self.data, expect_errors=True)
-        self.assertEqual(resp.status_code, 200)
-        self.assertEqual(4, resp.json)
+        self.assertEqual(resp.status_code, 403)
+        self.assertEqual(resp.json, {'message': 'Membership is banned: user@email.com'})
 
     def test_subscribe_already_member(self):
         path = '/members'
@@ -64,16 +64,16 @@ class TestAPI(MailmanAPITestCase):
 
         resp = self.client.put(self.url + self.list_name + path,
                                self.data, expect_errors=True)
-        self.assertEqual(resp.status_code, 200)
-        self.assertEqual(3, resp.json)
+        self.assertEqual(resp.status_code, 405)
+        self.assertEqual(resp.json, {'message': 'Already a member: user@email.com'})
 
     def test_subscribe_bad_email(self):
         path = '/members'
         data = {'address': 'user@emailcom'}
         resp = self.client.put(self.url + self.list_name + path,
                                data, expect_errors=True)
-        self.assertEqual(resp.status_code, 200)
-        self.assertEqual(5, resp.json)
+        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(resp.json, {'message': 'Bad email: user@emailcom'})
 
     def test_unsubscribe(self):
         path = '/members'
@@ -84,23 +84,23 @@ class TestAPI(MailmanAPITestCase):
         mlist.Unlock()
 
         resp = self.client.delete(self.url + self.list_name + path,
-                                  self.data, expect_errors=True)
+                                  self.data, expect_errors=False)
         self.assertEqual(resp.status_code, 200)
-        self.assertEqual(0, resp.json)
+        self.assertEqual(resp.json, {'message': 'Success'})
 
     def test_unsubscribe_not_member(self):
         path = '/members'
         resp = self.client.delete(self.url + self.list_name + path,
                                   self.data, expect_errors=True)
-        self.assertEqual(resp.status_code, 200)
-        self.assertEqual(7, resp.json)
+        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(resp.json, {'message': 'Not a member: user@email.com'})
 
     def test_mailman_site_list_not_listed_among_lists(self):
         mailman_site_list = Defaults.MAILMAN_SITE_LIST
 
         self.create_list(mailman_site_list)
 
-        resp = self.client.get(self.url, expect_errors=True)
+        resp = self.client.get(self.url, expect_errors=False)
 
         self.assertEqual(resp.status_code, 200)
         self.assertIsInstance(resp.json, list)
@@ -110,7 +110,7 @@ class TestAPI(MailmanAPITestCase):
             self.assertNotEqual(mlist.get("listname"), mailman_site_list)
 
     def test_list_lists(self):
-        resp = self.client.get(self.url, expect_errors=True)
+        resp = self.client.get(self.url, expect_errors=False)
         total_lists = len(resp.json)
         found = False
 
@@ -131,7 +131,7 @@ class TestAPI(MailmanAPITestCase):
 
         data = {'admin': self.data['address'], 'password': '123456'}
 
-        resp = self.client.put(url, data, expect_errors=True)
+        resp = self.client.put(url, data, expect_errors=False)
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.json, {'message': 'Success'})
         self.remove_list(new_list)
@@ -139,12 +139,10 @@ class TestAPI(MailmanAPITestCase):
     def test_create_list_already_exists(self):
         new_list = self.list_name
         url = self.url + new_list
-
         data = {'admin': self.data['address'], 'password': '123456'}
-
         resp = self.client.put(url, data, expect_errors=True)
-        self.assertEqual(resp.status_code, 200)
-        self.assertEqual(13, resp.json)
+        self.assertEqual(resp.status_code, 400)
+        self.assertEqual({'message': 'List already exists: ' + new_list}, resp.json)
 
     def test_create_private_list(self):
         new_list = "new_list"
@@ -152,7 +150,7 @@ class TestAPI(MailmanAPITestCase):
 
         data = {'admin': self.data['address'], 'password': '123456',
                 'archive_private': 1}
-        resp = self.client.put(url, data, expect_errors=True)
+        resp = self.client.put(url, data, expect_errors=False)
         mlist = MailList.MailList(new_list)
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(int(mlist.archive_private), 1)
@@ -165,7 +163,7 @@ class TestAPI(MailmanAPITestCase):
 
         data = {'admin': self.data['address'], 'password': '123456',
                 'archive_private': 0}
-        resp = self.client.put(url, data, expect_errors=True)
+        resp = self.client.put(url, data, expect_errors=False)
         mlist = MailList.MailList(new_list)
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(int(mlist.archive_private), 0)
@@ -178,7 +176,7 @@ class TestAPI(MailmanAPITestCase):
 
         data = {'admin': self.data['address'], 'password': '123456',
                 'archive_private': 2}
-        resp = self.client.put(url, data, expect_errors=True)
+        resp = self.client.put(url, data, expect_errors=False)
         mlist = MailList.MailList(new_list)
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(int(mlist.archive_private), 0)
@@ -191,7 +189,7 @@ class TestAPI(MailmanAPITestCase):
 
         data = {'admin': self.data['address'], 'password': '123456',
                 'archive_private': -1}
-        resp = self.client.put(url, data, expect_errors=True)
+        resp = self.client.put(url, data, expect_errors=False)
         mlist = MailList.MailList(new_list)
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(int(mlist.archive_private), 0)
@@ -204,7 +202,7 @@ class TestAPI(MailmanAPITestCase):
 
         data = {'admin': self.data['address'], 'password': '123456',
                 'subscribe_policy': 1}
-        resp = self.client.put(url, data, expect_errors=True)
+        resp = self.client.put(url, data, expect_errors=False)
         mlist = MailList.MailList(new_list)
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(int(mlist.subscribe_policy), 1)
@@ -217,7 +215,7 @@ class TestAPI(MailmanAPITestCase):
 
         data = {'admin': self.data['address'], 'password': '123456',
                 'subscribe_policy': 2}
-        resp = self.client.put(url, data, expect_errors=True)
+        resp = self.client.put(url, data, expect_errors=False)
         mlist = MailList.MailList(new_list)
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(int(mlist.subscribe_policy), 2)
@@ -230,7 +228,7 @@ class TestAPI(MailmanAPITestCase):
 
         data = {'admin': self.data['address'], 'password': '123456',
                 'subscribe_policy': 3}
-        resp = self.client.put(url, data, expect_errors=True)
+        resp = self.client.put(url, data, expect_errors=False)
         mlist = MailList.MailList(new_list)
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(int(mlist.subscribe_policy), 3)
@@ -243,7 +241,7 @@ class TestAPI(MailmanAPITestCase):
 
         data = {'admin': self.data['address'], 'password': '123456',
                 'subscribe_policy': 4}
-        resp = self.client.put(url, data, expect_errors=True)
+        resp = self.client.put(url, data, expect_errors=False)
         mlist = MailList.MailList(new_list)
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(int(mlist.subscribe_policy), 1)
@@ -256,7 +254,7 @@ class TestAPI(MailmanAPITestCase):
 
         data = {'admin': self.data['address'], 'password': '123456',
                 'subscribe_policy': 0}
-        resp = self.client.put(url, data, expect_errors=True)
+        resp = self.client.put(url, data, expect_errors=False)
         mlist = MailList.MailList(new_list)
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(int(mlist.subscribe_policy), 1)
@@ -266,12 +264,11 @@ class TestAPI(MailmanAPITestCase):
     def test_create_list_invalid_params(self):
         new_list = "new_list"
         url = self.url + new_list
-
         data = {'admin': self.data['address'], 'password': '123456',
                 'subscribe_policy': 'Invalid', 'archive_private': 'Invalid'}
         resp = self.client.put(url, data, expect_errors=True)
-        self.assertEqual(resp.status_code, 200)
-        self.assertEqual(resp.json, 14)
+        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(resp.json, {'message': "Invalid parameters: invalid literal for int() with base 10: 'Invalid'"})
         self.remove_list(new_list)
 
     def test_create_list_invalid_password(self):
@@ -280,8 +277,8 @@ class TestAPI(MailmanAPITestCase):
 
         data = {'admin': self.data['address'], 'password': ''}
         resp = self.client.put(url, data, expect_errors=True)
-        self.assertEqual(resp.status_code, 200)
-        self.assertEqual(resp.json, 11)
+        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(resp.json, {'message': 'Invalid password'})
         self.remove_list(new_list)
 
     def test_members(self):
@@ -296,7 +293,7 @@ class TestAPI(MailmanAPITestCase):
         mlist.Save()
         mlist.Unlock()
 
-        resp = self.client.get(self.url + list_name + path, expect_errors=True)
+        resp = self.client.get(self.url + list_name + path, expect_errors=False)
         self.assertEqual(resp.status_code, 200)
         self.assertEqual([self.data['address']], resp.json)
 
@@ -309,15 +306,15 @@ class TestAPI(MailmanAPITestCase):
         path = '/members'
 
         resp = self.client.get(self.url + list_name + path, expect_errors=True)
-        self.assertEqual(resp.status_code, 200)
-        self.assertEqual(12, resp.json)
+        self.assertEqual(resp.status_code, 404)
+        self.assertEqual(resp.json, {'message': 'Unknown list: list14'})
 
     def test_delete_list(self):
         #TODO place holder for future addition of list deletion
         pass
 
     def test_list_attr(self):
-        resp = self.client.get(self.url + self.list_name, expect_errors=True)
+        resp = self.client.get(self.url + self.list_name, expect_errors=False)
         total_lists = len(resp.json)
         found = False
 

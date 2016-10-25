@@ -31,7 +31,7 @@ if __name__ == '__main__':
     sys.path.append(opt.mailmanlib_path)
     from mailmanapi import routes
 
-    application = routes.get_application(opt.allow_from)
+    application = routes.get_application()
 
     host, port = opt.bind.split(':')
 
