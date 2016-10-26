@@ -4,14 +4,9 @@ Quickstart
 Installation
 ------------
 
-Pip
-+++
-
-You can use pip to install mailman-api and requirements:
-
 .. code-block:: sh
 
-    $ pip install mailman-api
+    $ python setup.py install
 
 
 
@@ -37,10 +32,8 @@ Usage: mailman-api [options]
 
 Options:
   -h, --help            show this help message and exit
-  -b BIND, --bind=BIND  Bind address. Default: '0.0.0.0:8124'.
+  -b BIND, --bind=BIND  Bind address. Default: '127.0.0.1:8124'.
   -l MAILMANLIB_PATH, --mailman-lib-path=MAILMANLIB_PATH
                         Path to mailman libs directory. Default:
                         '/usr/lib/mailman'.
-  -d, --debug           Print debug information
-
 
