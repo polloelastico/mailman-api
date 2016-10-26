@@ -22,8 +22,8 @@ TEST_REQUIREMENTS = [
 setup(
     name='mailman-api',
     version=find_version('mailmanapi/__init__.py'),
-    author='Edouard Poitras',
-    author_email='epoitras@linuxfoundation.org',
+    author='Sergio Oliveira',
+    author_email='sergio@tracy.com.br',
     packages=['mailmanapi'],
     package_data={'mailmanapi': ['templates/*']},
     scripts=['scripts/mailman-api'],
