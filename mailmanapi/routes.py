@@ -4,7 +4,7 @@ from . import api
 
 def create_routes(app):
     app.route('/', method='GET', callback=api.list_lists)
-    app.route('/<listname>', method='PUT', callback=api.create_list)
+    app.route('/<listname>', method='POST', callback=api.create_list)
     app.route('/<listname>', method='DELETE', callback=api.delete_list)
     app.route('/<listname>', method='GET', callback=api.list_attr)
     app.route('/<listname>/members', method='PUT', callback=api.subscribe)

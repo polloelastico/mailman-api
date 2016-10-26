@@ -24,7 +24,7 @@ Create List
 +++++++++++
 Create a new list.
 
-    **Method**: PUT
+    **Method**: POST
 
     **URI**: /<listname>
 
@@ -43,6 +43,9 @@ Delete a list.
 
     **URI**: /<listname>
 
+    **Parameters**:
+        * `delete_archives`: If this equals to 'true', archives will be deleted
+          as well
 
 List Attributes
 +++++++++++++++

@@ -198,7 +198,7 @@ def create_list(listname):
     if archive_private < 0 or archive_private > 1:
         archive_private = 0
 
-    if password == '':
+    if password is None or password == '':
         message = 'Invalid password'
         return HTTPResponse(status=get_error_code('InvalidPassword'),
                             body=json.dumps({'message': message}),

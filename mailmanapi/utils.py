@@ -1,5 +1,4 @@
 import json
-import logging
 from bottle import HTTPResponse
 from Mailman import MailList, Errors
 
