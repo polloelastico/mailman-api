@@ -1,24 +1,19 @@
 #!/usr/bin/env python
-
 import sys
-
 from bottle import run
 from optparse import OptionParser
 
 
 def parse_options():
     parser = OptionParser()
-    parser.add_option("-b", "--bind", dest="bind", default='0.0.0.0:8124',
-                      help="Bind address. Default: '0.0.0.0:8124'.")
+    parser.add_option("-b", "--bind", dest="bind", default='127.0.0.1:8124',
+                      help="Bind address. Default: '127.0.0.1:8124'.")
     parser.add_option("-l", "--mailman-lib-path", dest="mailmanlib_path",
                       default='/usr/lib/mailman',
                       help=("Path to mailman libs directory. "
                             "Default: '/usr/lib/mailman'."))
     parser.add_option("-w", "--workers", dest="workers",
                       default=3, help="Number of workers. Default: 3")
-    parser.add_option("-d", "--debug", action="store_true", default=False,
-                      help="Print debug information")
-
     (options, args) = parser.parse_args()
     return options
 
@@ -35,5 +30,5 @@ if __name__ == '__main__':
 
     host, port = opt.bind.split(':')
 
-    run(application, host=host, port=port, debug=opt.debug, server='gunicorn',
+    run(application, host=host, port=port, server='gunicorn',
         max_requests=1000, workers=opt.workers)
