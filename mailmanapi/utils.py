@@ -1,11 +1,7 @@
 import json
 import logging
 from bottle import HTTPResponse
-
-try:
-    from Mailman import MailList, Errors
-except ImportError:
-    logging.error('Could not import Mailman module')
+from Mailman import MailList, Errors
 
 ERROR_CODES = {
     'MMSubscribeNeedsConfirmation': 406,
@@ -14,7 +10,7 @@ ERROR_CODES = {
     'MembershipIsBanned': 403,
     'MMBadEmailError': 400,
     'MMHostileAddress': 403,
-    'NotAMemberError': 400,
+    'NotAMemberError': 404,
     'MissingInformation': 400,
     'BadListNameError': 404,
     'AssertionError': 500,

@@ -1,6 +1,7 @@
+import sys
+from nose.tools import *
 from .utils import MailmanAPITestCase
 from Mailman import MailList, UserDesc, Defaults
-from time import strftime
 
 class TestAPI(MailmanAPITestCase):
     url = '/'
@@ -92,7 +93,7 @@ class TestAPI(MailmanAPITestCase):
         path = '/members'
         resp = self.client.delete(self.url + self.list_name + path,
                                   self.data, expect_errors=True)
-        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(resp.status_code, 404)
         self.assertEqual(resp.json, {'message': 'Not a member: user@email.com'})
 
     def test_mailman_site_list_not_listed_among_lists(self):
@@ -297,18 +298,46 @@ class TestAPI(MailmanAPITestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertEqual([self.data['address']], resp.json)
 
-    def test_members_unknown_list(self):
+    def test_members_address(self):
         list_name = 'list14'
+        path = '/members'
+        user_desc1 = UserDesc.UserDesc(self.data['address'], 'fullname1', 1)
+        user_desc2 = UserDesc.UserDesc('another@email.address', 'fullname2', 1)
+        self.create_list(list_name)
+        mlist = MailList.MailList(list_name)
+        mlist.AddMember(user_desc1)
+        mlist.AddMember(user_desc2)
+        mlist.Save()
+        mlist.Unlock()
+        # Known address.
+        resp = self.client.get(self.url + list_name + path,
+                               {'address': 'another@email.address'},
+                               expect_errors=False)
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.json,
+                         [{'address': 'another@email.address',
+                           'fullname': 'fullname2'}])
+        # Unknown address.
+        resp = self.client.get(self.url + list_name + path,
+                               {'address': 'unknown@email.address'},
+                               expect_errors=True)
+        self.assertEqual(resp.status_code, 404)
+        self.assertEqual(resp.json,
+                         {'message': 'Not a member: unknown@email.address'})
+
+    def test_members_unknown_list(self):
+        list_name = 'list15'
         path = '/members'
 
         resp = self.client.get(self.url + list_name + path, expect_errors=True)
         self.assertEqual(resp.status_code, 404)
-        self.assertEqual(resp.json, {'message': 'Unknown list: list14'})
+        self.assertEqual(resp.json, {'message': 'Unknown list: ' + list_name})
 
     def test_delete_non_existing_list(self):
-        resp = self.client.delete(self.url + 'fake_list', expect_errors=True)
+        list_name = 'fake_list'
+        resp = self.client.delete(self.url + list_name, expect_errors=True)
         self.assertEqual(resp.status_code, 404)
-        self.assertEqual(resp.json, {'message': 'Unknown list: fake_list'})
+        self.assertEqual(resp.json, {'message': 'Unknown list: ' + list_name})
 
     def test_delete_existing_list(self):
         list_name = 'new_list'
@@ -316,8 +345,20 @@ class TestAPI(MailmanAPITestCase):
         mlist = MailList.MailList(list_name)
         mlist.Save()
         mlist.Unlock()
+        resp = self.client.delete(self.url + list_name,
+                                  expect_errors=False)
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.json, {'message': 'Success'})
 
-        resp = self.client.delete(self.url + list_name, expect_errors=False)
+        # Delete archives as well.
+        list_name = 'new_list2'
+        self.create_list(list_name)
+        mlist = MailList.MailList(list_name)
+        mlist.Save()
+        mlist.Unlock()
+        resp = self.client.delete(self.url + list_name,
+                                  {'delete_archives': True},
+                                  expect_errors=False)
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.json, {'message': 'Success'})
 
@@ -335,3 +376,8 @@ class TestAPI(MailmanAPITestCase):
             if mlist.get("listname") == self.list_name:
                 found = True
         self.assertTrue(found)
+
+    def test_fake_list_attr(self):
+        resp = self.client.get(self.url + 'fake_list', expect_errors=True)
+        self.assertEqual(resp.status_code, 404)
+        self.assertEqual(resp.json, {'message': 'Unknown list: fake_list'})
