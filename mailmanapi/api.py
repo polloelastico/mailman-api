@@ -1,5 +1,6 @@
 import os
 import json
+import shutil
 from .utils import parse_boolean, \
                    get_mailinglist, \
                    get_error_code, \
@@ -8,7 +9,8 @@ from Mailman import Errors, \
                     UserDesc, \
                     MailList, \
                     Utils, \
-                    Defaults
+                    Defaults, \
+                    mm_cfg
 from bottle import HTTPResponse, \
                    request
 
@@ -227,20 +229,59 @@ def delete_list(listname):
 
     **Method**: DELETE
 
-    **URI**: /<listname>"""
+    **URI**: /<listname>
+
+    **Parameters**:
+
+      * `delete_archives`: If this equals to 'true', archives will be deleted
+      as well"""
+
+    delete_archives = parse_boolean(request.forms.get('delete_archives'))
     mlist = get_mailinglist(listname)
-    message = 'Success'
-    status_code = 200
-    try:
-        mlist.ApprovedDeleteMember(address, admin_notif=False, userack=True)
-    except Errors.NotAMemberError, e:
-        message = get_error_message(e.__class__.__name__) + ': ' + str(e)
-        status_code = get_error_code(e.__class__.__name__)
-    finally:
-        mlist.Save()
-        mlist.Unlock()
-    return HTTPResponse(status=status_code,
-                        body=json.dumps({'message': message}),
+    """
+    if mlist.Authenticate((mm_cfg.AuthCreator,
+                           mm_cfg.AuthListAdmin,
+                           mm_cfg.AuthSiteAdmin),
+                          password) == mm_cfg.UnAuthorized:
+        return HTTPResponse(status=403,
+                            body=json.dumps(
+                                {'message': \
+                                 'Not authorized to delete this list'}
+                            ),
+                            content_type='application/json')
+
+    # Do the MTA-specific list deletion tasks
+    if mm_cfg.MTA:
+        modname = 'Mailman.MTA.' + mm_cfg.MTA
+        __import__(modname)
+        sys.modules[modname].remove(mlist, cgi=1)
+    """
+
+    REMOVABLES = ['lists/%s']
+    if delete_archives:
+        REMOVABLES.extend(['archives/private/%s',
+                           'archives/private/%s.mbox',
+                           'archives/public/%s',
+                           'archives/public/%s.mbox',
+                           ])
+    listname = mlist.internal_name()
+    for dirtmpl in REMOVABLES:
+        dir = os.path.join(mm_cfg.VAR_PREFIX, dirtmpl % listname)
+        if os.path.islink(dir):
+            try:
+                os.unlink(dir)
+            except OSError, e:
+                return HTTPResponse(status=500,
+                                    body=json.dumps({'message': str(e)}),
+                                    content_type='application/json')
+        elif os.path.isdir(dir):
+            try:
+                shutil.rmtree(dir)
+            except OSError, e:
+                return HTTPResponse(status=500,
+                                    body=json.dumps({'message': str(e)}),
+                                    content_type='application/json')
+    return HTTPResponse(body=json.dumps({'message': 'Success'}),
                         content_type='application/json')
 
 

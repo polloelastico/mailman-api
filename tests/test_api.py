@@ -297,10 +297,6 @@ class TestAPI(MailmanAPITestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertEqual([self.data['address']], resp.json)
 
-    def test_member_singular(self):
-        #TODO
-        pass
-
     def test_members_unknown_list(self):
         list_name = 'list14'
         path = '/members'
@@ -309,9 +305,21 @@ class TestAPI(MailmanAPITestCase):
         self.assertEqual(resp.status_code, 404)
         self.assertEqual(resp.json, {'message': 'Unknown list: list14'})
 
-    def test_delete_list(self):
-        #TODO place holder for future addition of list deletion
-        pass
+    def test_delete_non_existing_list(self):
+        resp = self.client.delete(self.url + 'fake_list', expect_errors=True)
+        self.assertEqual(resp.status_code, 404)
+        self.assertEqual(resp.json, {'message': 'Unknown list: fake_list'})
+
+    def test_delete_existing_list(self):
+        list_name = 'new_list'
+        self.create_list(list_name)
+        mlist = MailList.MailList(list_name)
+        mlist.Save()
+        mlist.Unlock()
+
+        resp = self.client.delete(self.url + list_name, expect_errors=False)
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.json, {'message': 'Success'})
 
     def test_list_attr(self):
         resp = self.client.get(self.url + self.list_name, expect_errors=False)

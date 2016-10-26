@@ -1,6 +1,5 @@
 import json
 import logging
-from time import strftime
 from bottle import HTTPResponse
 
 try:
@@ -66,14 +65,3 @@ def get_mailinglist(listname, lock=True):
         raise HTTPResponse(status=status_code,
                            body=json.dumps({'message': message}),
                            content_type='application/json')
-
-
-def get_timestamp():
-    return strftime('%a, %d %b %Y %H:%M:%S %z (%Z)')
-
-
-def remove_list(listname):
-    """
-    TODO: see /usr/lib/mailman/bin/rmlist
-    """
-    pass
