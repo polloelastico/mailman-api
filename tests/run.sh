@@ -1,5 +1,4 @@
 #!/bin/bash
-
 if [ "$(uname)" == 'Darwin' ]; then
     eval "$(boot2docker shellinit)"
 fi
@@ -33,11 +32,11 @@ function run {
 
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
-DOCKER_IMAGE="tracywebtech/mailman-api-test"
+DOCKER_IMAGE="mailman-api-test"
 
 DOCKER_CMD="docker run -w /srv/mailman-api -v $DIR/../:/srv/mailman-api $DOCKER_IMAGE"
 
-run $DOCKER_CMD bash -c "'python setup.py nosetests --with-coverage --cover-package=mailmanapi --cover-erase'"
+run $DOCKER_CMD bash -c "'PYTHONPATH=$PYTHONPATH:/usr/lib/mailman python setup.py nosetests --with-coverage --cover-package=mailmanapi --cover-erase'"
 run $DOCKER_CMD flake8 mailmanapi
 
 exit $status

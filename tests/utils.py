@@ -8,9 +8,7 @@ from Mailman import MailList, Utils
 
 
 class MailmanAPITestCase(unittest.TestCase):
-
     name = ''
-    api_version = ''
 
     def getName(self):
         """ Get the name of the test """
@@ -20,7 +18,7 @@ class MailmanAPITestCase(unittest.TestCase):
 
     def __str__(self):
         self.getName()
-        out = '\r[%s] %s test ' % (self.api_version, self.name)
+        out = '\r%s test' %self.name
         out = out.ljust(70, '-')
         return out + ' '
 
@@ -36,7 +34,7 @@ class MailmanAPITestCase(unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         super(MailmanAPITestCase, self).__init__(*args, **kwargs)
-        application = get_application(['127.0.0.1'])
+        application = get_application()
         self.client = TestApp(application, extra_environ={
             'REMOTE_ADDR': '127.0.0.1',
         })
@@ -46,7 +44,6 @@ class MailmanAPITestCase(unittest.TestCase):
                     list_pass='123456', subscribe_policy=0):
         if list_name in Utils.list_names():
             return
-
         m = MailList.MailList()
         m.Create(list_name, list_admin, list_pass)
         m.subscribe_policy = subscribe_policy

@@ -1,4 +1,3 @@
-
 all:
 	@echo "Usage:"
 	@echo "make test	Run tests"
@@ -8,4 +7,4 @@ test:
 	./run.sh
 
 image:
-	docker build --tag=tracywebtech/mailman-api-test .
+	docker build --tag=mailman-api-test .
