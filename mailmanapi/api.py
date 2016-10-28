@@ -68,7 +68,7 @@ def list_attr(listname):
     lists = []
 
     try:
-        mlist = get_mailinglist(listname)
+        mlist = get_mailinglist(listname, lock=False)
     except Errors.MMUnknownListError, e:
         message = get_error_message(e.__class__.__name__) + ': ' + str(e)
         return HTTPResponse(status=get_error_code(e.__class__.__name__),
@@ -107,7 +107,7 @@ def subscribe(listname):
     fullname = request.forms.get('fullname')
     digest = parse_boolean(request.forms.get('digest'))
 
-    mlist = get_mailinglist(listname)
+    mlist = get_mailinglist(listname, lock=False)
     userdesc = UserDesc.UserDesc(address, fullname, digest=digest)
     message = 'Success'
     status_code = 200
@@ -147,7 +147,7 @@ def unsubscribe(listname):
 
     """
     address = request.forms.get('address')
-    mlist = get_mailinglist(listname)
+    mlist = get_mailinglist(listname, lock=False)
     message = 'Success'
     status_code = 200
     try:
@@ -237,7 +237,7 @@ def delete_list(listname):
       as well"""
 
     delete_archives = parse_boolean(request.forms.get('delete_archives'))
-    mlist = get_mailinglist(listname)
+    mlist = get_mailinglist(listname, lock=False)
     """
     if mlist.Authenticate((mm_cfg.AuthCreator,
                            mm_cfg.AuthListAdmin,
