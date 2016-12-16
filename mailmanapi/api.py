@@ -47,6 +47,9 @@ def list_lists():
                 'archive_private': mlist.archive_private,
                 'real_name': mlist.real_name,
                 'description': mlist.description,
+                'member_count': -1,
+                'created': mlist.created_at,
+                'owner': mlist.owner
             }
 
             lists.append(list_values)
