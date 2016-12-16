@@ -169,7 +169,7 @@ def unsubscribe(listname):
 def create_list(listname):
     """Create an email list.
 
-    **Method**: PUT
+    **Method**: POST
 
     **URI**: /<listname>
 
