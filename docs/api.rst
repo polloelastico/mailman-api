@@ -34,6 +34,10 @@ Create a new list.
         * `subscribe_policy`: 1) Confirm; 2) Approval; 3)Confirm and approval.
           Default is Confirm (1)
         * `archive_private`: 0) Public; 1) Private. Default is Public (0)
+        * `emailhost`: email host
+        * `urlhost`: url host
+        * `notification_email`: email for notification
+        * `quiet`: 0) Send email notification on list creation; 1) No notification email. Default is to send notification (0)
 
 Delete List
 +++++++++++
