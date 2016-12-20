@@ -10,6 +10,8 @@ from Mailman import Errors, \
                     MailList, \
                     Utils, \
                     Defaults, \
+                    Message, \
+                    i18n, \
                     mm_cfg
 from bottle import HTTPResponse, \
                    request
@@ -184,13 +186,13 @@ def create_list(listname):
     password = request.forms.get('password')
     urlhost = request.forms.get('urlhost')
     emailhost = request.forms.get('emailhost')
-    quiet = request.forms.get('quiet', 0)
     subscribe_policy = request.forms.get('subscribe_policy', 1)
     archive_private = request.forms.get('archive_private', 0)
+    quiet = request.forms.get('quiet', 0)
+    notification_email = request.forms.get('notification_email')
 
     status_code = 200
     try:
-        quiet = int(quiet)
         subscribe_policy = int(subscribe_policy)
         archive_private = int(archive_private)
     except ValueError, e:
@@ -205,9 +207,6 @@ def create_list(listname):
     if archive_private < 0 or archive_private > 1:
         archive_private = 0
 
-    if quiet < 0 or quiet > 1:
-        quiet = 0
-
     if password is None or password == '':
         message = 'Invalid password'
         return HTTPResponse(status=get_error_code('InvalidPassword'),
@@ -219,7 +218,7 @@ def create_list(listname):
     mail_list = MailList.MailList()
     message = 'Success'
     try:
-        mail_list.Create(listname, admin, password, urlhost=urlhost, emailhost=emailhost, quiet=quiet)
+        mail_list.Create(listname, admin, password, urlhost=urlhost, emailhost=emailhost)
         mail_list.archive_private = archive_private
         mail_list.subscribe_policy = subscribe_policy
         mail_list.Save()
@@ -229,6 +228,31 @@ def create_list(listname):
         status_code = get_error_code(e.__class__.__name__)
     finally:
         mail_list.Unlock()
+        if not quiet:
+            siteowner = Utils.get_site_email(mail_list.host_name, 'owner')
+            text = Utils.maketext(
+                'newlist.txt',
+                {'listname'    : listname,
+                 'password'    : password,
+                 'admin_url'   : mail_list.GetScriptURL('admin', absolute=1),
+                 'listinfo_url': mail_list.GetScriptURL('listinfo', absolute=1),
+                 'requestaddr' : mail_list.GetRequestEmail(),
+                 'siteowner'   : notification_email,
+                 }, mail_list=mail_list)
+            # Set the I18N language to the list's preferred language so the header
+            # will match the template language.  Stashing and restoring the old
+            # translation context is just (healthy? :) paranoia.
+            otrans = i18n.get_translation()
+            #i18n.set_language(mail_list.preferred_language)
+            i18n.set_language('EN')
+            try:
+                msg = Message.UserNotification(
+                    admin, notification_email,
+                    _('Your new mailing list: %(listname)s'),
+                    text, 'EN')
+                msg.send(mail_list)
+            finally:
+                i18n.set_translation(otrans)
     return HTTPResponse(status=status_code,
                         body=json.dumps({'message': message}),
                         content_type='application/json')
