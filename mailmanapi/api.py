@@ -182,11 +182,15 @@ def create_list(listname):
       * `archive_private`: 0) Public; 1) Private. Default is Public (0) """
     admin = request.forms.get('admin')
     password = request.forms.get('password')
+    urlhost = request.forms.get('urlhost')
+    emailhost = request.forms.get('emailhost')
+    quiet = request.forms.get('quiet', 0)
     subscribe_policy = request.forms.get('subscribe_policy', 1)
     archive_private = request.forms.get('archive_private', 0)
 
     status_code = 200
     try:
+        quiet = int(quiet)
         subscribe_policy = int(subscribe_policy)
         archive_private = int(archive_private)
     except ValueError, e:
@@ -201,6 +205,9 @@ def create_list(listname):
     if archive_private < 0 or archive_private > 1:
         archive_private = 0
 
+    if quiet < 0 or quiet > 1:
+        quiet = 0
+
     if password is None or password == '':
         message = 'Invalid password'
         return HTTPResponse(status=get_error_code('InvalidPassword'),
@@ -212,7 +219,7 @@ def create_list(listname):
     mail_list = MailList.MailList()
     message = 'Success'
     try:
-        mail_list.Create(listname, admin, password)
+        mail_list.Create(listname, admin, password, urlhost=urlhost, emailhost=emailhost, quiet=quiet)
         mail_list.archive_private = archive_private
         mail_list.subscribe_policy = subscribe_policy
         mail_list.Save()
