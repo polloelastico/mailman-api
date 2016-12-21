@@ -36,7 +36,7 @@ Create a new list.
         * `archive_private`: 0) Public; 1) Private. Default is Public (0)
         * `emailhost`: email host
         * `urlhost`: url host
-        * `notification_email`: email for notification
+        * `notification_email`: email for notification. If null assumes admin email.
         * `quiet`: 0) Send email notification on list creation; 1) No notification email. Default is to send notification (0)
 
 Delete List

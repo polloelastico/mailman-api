@@ -188,13 +188,17 @@ def create_list(listname):
     emailhost = request.forms.get('emailhost')
     subscribe_policy = request.forms.get('subscribe_policy', 1)
     archive_private = request.forms.get('archive_private', 0)
-    quiet = request.forms.get('quiet', 0)
+    quiet = request.forms.get('quiet')
     notification_email = request.forms.get('notification_email')
 
     status_code = 200
     try:
         subscribe_policy = int(subscribe_policy)
         archive_private = int(archive_private)
+        if quiet is None:
+            quiet = 0
+        if notification_email is None:
+            notification_email = admin
     except ValueError, e:
         message = 'Invalid parameters: ' + str(e)
         return HTTPResponse(status=get_error_code('InvalidParams'),
@@ -206,6 +210,9 @@ def create_list(listname):
 
     if archive_private < 0 or archive_private > 1:
         archive_private = 0
+
+    if quiet < 0 or quiet > 1:
+        quiet = 0
 
     if password is None or password == '':
         message = 'Invalid password'
