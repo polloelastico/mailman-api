@@ -16,6 +16,8 @@ from Mailman import Errors, \
 from bottle import HTTPResponse, \
                    request
 
+_ = i18n._
+
 CWD = os.path.abspath(os.path.dirname(__file__))
 
 
@@ -179,24 +181,27 @@ def create_list(listname):
 
       * `admin`: email of list admin
       * `password`: list admin password
-      * `subscribe_policy`: 1) Confirm; 2) Approval; 3)Confirm and approval.
-      Default is Confirm (1)
-      * `archive_private`: 0) Public; 1) Private. Default is Public (0) """
+      * `subscribe_policy`: 1) Confirm; 2) Approval; 3)Confirm and approval. Default is Confirm (1)
+      * `archive_private`: 0) Public; 1) Private. Default is Public (0)
+      * `emailhost`: email host
+      * `urlhost`: url host
+      * `notification_email`: email for notification. If null assumes admin email.
+      * `quiet`: 0) Send email notification on list creation; 1) No notification email. Default is to send notification (0) """
+
     admin = request.forms.get('admin')
     password = request.forms.get('password')
     urlhost = request.forms.get('urlhost')
     emailhost = request.forms.get('emailhost')
     subscribe_policy = request.forms.get('subscribe_policy', 1)
     archive_private = request.forms.get('archive_private', 0)
-    quiet = request.forms.get('quiet')
+    quiet = request.forms.get('quiet', 0)
     notification_email = request.forms.get('notification_email')
 
     status_code = 200
     try:
         subscribe_policy = int(subscribe_policy)
         archive_private = int(archive_private)
-        if quiet is None:
-            quiet = 0
+        quiet = int(quiet)
         if notification_email is None:
             notification_email = admin
     except ValueError, e:
@@ -229,37 +234,64 @@ def create_list(listname):
         mail_list.archive_private = archive_private
         mail_list.subscribe_policy = subscribe_policy
         mail_list.Save()
+        if not quiet:
+            # print 'Sending notification email.'
+            i18n.set_language('en')
+            listname = listname
+            password = password
+            admin_url = mail_list.GetScriptURL('admin', absolute=1)
+            listinfo_url = mail_list.GetScriptURL('listinfo', absolute=1)
+            requestaddr = mail_list.GetRequestEmail()
+            siteowner = notification_email
+            text = """ The mailing list {0} has just been created for you.  The
+                following is some basic information about your mailing list.
+
+                Your mailing list password is:
+
+                    {1}
+
+                You need this password to configure your mailing list.  You also need
+                it to handle administrative requests, such as approving mail if you
+                choose to run a moderated list.
+
+                You can configure your mailing list at the following web page:
+
+                    {2}
+
+                The web page for users of your mailing list is:
+
+                    {3}
+
+                You can even customize these web pages from the list configuration
+                page.  However, you do need to know HTML to be able to do this.
+
+                There is also an email-based interface for users (not administrators)
+                of your list; you can get info about using it by sending a message
+                with just the word `help' as subject or in the body, to:
+
+                    {4}
+
+                To unsubscribe a user: from the mailing list 'listinfo' web page,
+                click on or enter the user's email address as if you were that user.
+                Where that user would put in their password to unsubscribe, put in
+                your admin password.  You can also use your password to change
+                member's options, including digestification, delivery disabling, etc.
+
+                Please address all questions to {5}. """
+            text = text.format(listname, password, admin_url, listinfo_url, requestaddr, siteowner)
+            email_title = 'Your new mailing list: {0}'
+            email_title = email_title.format(listname)
+            msg = Message.UserNotification(
+                admin, notification_email,
+                _(email_title),
+                text, 'en')
+            msg.send(mail_list)
     except (Errors.BadListNameError, AssertionError,
             Errors.MMBadEmailError, Errors.MMListAlreadyExistsError), e:
         message = get_error_message(e.__class__.__name__) + ': ' + str(e)
         status_code = get_error_code(e.__class__.__name__)
     finally:
         mail_list.Unlock()
-        if not quiet:
-            siteowner = Utils.get_site_email(mail_list.host_name, 'owner')
-            text = Utils.maketext(
-                'newlist.txt',
-                {'listname'    : listname,
-                 'password'    : password,
-                 'admin_url'   : mail_list.GetScriptURL('admin', absolute=1),
-                 'listinfo_url': mail_list.GetScriptURL('listinfo', absolute=1),
-                 'requestaddr' : mail_list.GetRequestEmail(),
-                 'siteowner'   : notification_email,
-                 }, mail_list=mail_list)
-            # Set the I18N language to the list's preferred language so the header
-            # will match the template language.  Stashing and restoring the old
-            # translation context is just (healthy? :) paranoia.
-            otrans = i18n.get_translation()
-            #i18n.set_language(mail_list.preferred_language)
-            i18n.set_language('EN')
-            try:
-                msg = Message.UserNotification(
-                    admin, notification_email,
-                    _('Your new mailing list: %(listname)s'),
-                    text, 'EN')
-                msg.send(mail_list)
-            finally:
-                i18n.set_translation(otrans)
     return HTTPResponse(status=status_code,
                         body=json.dumps({'message': message}),
                         content_type='application/json')
