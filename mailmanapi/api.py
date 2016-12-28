@@ -236,54 +236,20 @@ def create_list(listname):
         mail_list.Save()
         if not quiet:
             # print 'Sending notification email.'
-            i18n.set_language('en')
-            listname = listname
-            password = password
-            admin_url = mail_list.GetScriptURL('admin', absolute=1)
-            listinfo_url = mail_list.GetScriptURL('listinfo', absolute=1)
-            requestaddr = mail_list.GetRequestEmail()
             siteowner = notification_email
-            text = """ The mailing list {0} has just been created for you.  The
-                following is some basic information about your mailing list.
-
-                Your mailing list password is:
-
-                    {1}
-
-                You need this password to configure your mailing list.  You also need
-                it to handle administrative requests, such as approving mail if you
-                choose to run a moderated list.
-
-                You can configure your mailing list at the following web page:
-
-                    {2}
-
-                The web page for users of your mailing list is:
-
-                    {3}
-
-                You can even customize these web pages from the list configuration
-                page.  However, you do need to know HTML to be able to do this.
-
-                There is also an email-based interface for users (not administrators)
-                of your list; you can get info about using it by sending a message
-                with just the word `help' as subject or in the body, to:
-
-                    {4}
-
-                To unsubscribe a user: from the mailing list 'listinfo' web page,
-                click on or enter the user's email address as if you were that user.
-                Where that user would put in their password to unsubscribe, put in
-                your admin password.  You can also use your password to change
-                member's options, including digestification, delivery disabling, etc.
-
-                Please address all questions to {5}. """
-            text = text.format(listname, password, admin_url, listinfo_url, requestaddr, siteowner)
-            email_title = 'Your new mailing list: {0}'
-            email_title = email_title.format(listname)
+            text = Utils.maketext(
+                'newlist.txt',
+                {'listname'    : listname,
+                 'password'    : password,
+                 'admin_url'   : mail_list.GetScriptURL('admin', absolute=1),
+                 'listinfo_url': mail_list.GetScriptURL('listinfo', absolute=1),
+                 'requestaddr' : mail_list.GetRequestEmail(),
+                 'siteowner'   : siteowner
+                 }, mlist=mail_list)
+            i18n.set_language('en')
             msg = Message.UserNotification(
-                admin, notification_email,
-                _(email_title),
+                admin, siteowner,
+                _('Your new mailing list: %(listname)s'),
                 text, 'en')
             msg.send(mail_list)
     except (Errors.BadListNameError, AssertionError,
