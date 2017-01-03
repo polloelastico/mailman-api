@@ -114,7 +114,7 @@ def subscribe(listname):
     fullname = request.forms.get('fullname')
     digest = parse_boolean(request.forms.get('digest'))
 
-    mlist = get_mailinglist(listname, lock=False)
+    mlist = get_mailinglist(listname)
     userdesc = UserDesc.UserDesc(address, fullname, digest=digest)
     message = 'Success'
     status_code = 200
