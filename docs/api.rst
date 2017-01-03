@@ -31,8 +31,8 @@ Create a new list.
     **Parameters**:
         * `admin`: email of list admin
         * `password`: list admin password
-        * `subscribe_policy`: 1) Confirm; 2) Approval; 3)Confirm and approval.
-          Default is Confirm (1)
+        * `subscribe_policy`: 0) Open subscriptions; 1) User must confirm; 2) Admin must approve; 3) User must confirm and then the admin must approve.
+          Default is User must confirm (1)
         * `archive_private`: 0) Public; 1) Private. Default is Public (0)
         * `emailhost`: email host
         * `urlhost`: url host
