@@ -154,7 +154,7 @@ def unsubscribe(listname):
 
     """
     address = request.forms.get('address')
-    mlist = get_mailinglist(listname, lock=False)
+    mlist = get_mailinglist(listname)
     message = 'Success'
     status_code = 200
     try:
