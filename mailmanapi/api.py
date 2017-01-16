@@ -51,7 +51,7 @@ def list_lists():
                 'archive_private': mlist.archive_private,
                 'real_name': mlist.real_name,
                 'description': mlist.description,
-                'member_count': -1,
+                'member_count': len(mlist.getMembers()),
                 'created': mlist.created_at,
                 'owner': mlist.owner
             }
