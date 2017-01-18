@@ -48,11 +48,12 @@ def list_lists():
         if not address or address in members:
             list_values = {
                 'listname': listname,
-                'archive_private': mlist.archive_private,
                 'real_name': mlist.real_name,
                 'description': mlist.description,
                 'member_count': len(mlist.getMembers()),
                 'created': mlist.created_at,
+                'subscribe_policy': mlist.subscribe_policy,
+                'archive_private': mlist.archive_private,
                 'owner': mlist.owner
             }
 
