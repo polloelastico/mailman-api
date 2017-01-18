@@ -3,7 +3,7 @@ from bottle import HTTPResponse
 from Mailman import MailList, Errors
 
 ERROR_CODES = {
-    'MMSubscribeNeedsConfirmation': 406,
+    'MMSubscribeNeedsConfirmation': 403,
     'MMNeedApproval': 401,
     'MMAlreadyAMember': 405,
     'MembershipIsBanned': 403,

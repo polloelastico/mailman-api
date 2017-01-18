@@ -31,7 +31,7 @@ class TestAPI(MailmanAPITestCase):
         self.change_list_attribute('subscribe_policy', 1)
         resp = self.client.put(self.url + self.list_name + path,
                                self.data, expect_errors=True)
-        self.assertEqual(resp.status_code, 406)
+        self.assertEqual(resp.status_code, 403)
         self.assertEqual(resp.json, {'message': 'Subscribe needs confirmation'})
 
     def test_subscribe_approval(self):
